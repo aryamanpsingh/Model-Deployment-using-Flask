@@ -1,4 +1,6 @@
 import requests
+from flask import Flask, render_template, request
+
 import pandas as pd
 
 def to_position(pred):
@@ -66,11 +68,27 @@ new_arr = [72,20,70,60,55,65,60,70,65,60,60,65,70,70,70,50,70,60,55,55,60,65,50,
 new_vals = pd.DataFrame(columns=['Index'])
 new_vals = new_vals.append([new_arr])
 
-url = 'http://localhost:5000/api'
+url = 'http://localhost:3000/api'
 print(new_arr)
-r = requests.post(url,json={'exp':new_arr,})
 
-pred = to_position(r.json())
-print(pred)
+app = Flask(__name__)
+
+@app.route('/send', methods=['GET','POST'])
+def send():
+    if request.method == 'POST':
+        features = [None]*32
+        for i in range(0,32):
+            features[i] = request.form[str(i)]
+        print(features)
+        ftr = [int(x) for x in features]
+        r = requests.post(url,json={'exp':ftr,})
+        pred = to_position(r.json())  
+        return render_template('result.html', position=pred)
+    else:
+        return render_template('index.html')
+
+if __name__ == "__main__":
+    app.run()
+
 
 #Decode position variable
